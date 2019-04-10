@@ -1,3 +1,3 @@
-require("./test.css");
+define(["bpmn-js"], function (BpmnViewer) {
 
-module.exports = {};
+});

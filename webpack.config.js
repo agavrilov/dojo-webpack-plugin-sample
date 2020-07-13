@@ -15,6 +15,7 @@
  */
 var DojoWebpackPlugin = require("dojo-webpack-plugin");
 var CopyWebpackPlugin = require("copy-webpack-plugin");
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 var UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
 var path = require("path");
@@ -67,7 +68,14 @@ module.exports = env => {
 				/^css!/, function(data) {
 					data.request = data.request.replace(/^css!/, "!style-loader!css-loader!less-loader!")
 				}
-			)
+			),
+
+			new HtmlWebpackPlugin({
+                filename: "expanded_template.html",
+                template: "template.html",
+                inject: false,
+                minify: false,
+            })
 		],
 		resolveLoader: {
 			modules: ["node_modules"]

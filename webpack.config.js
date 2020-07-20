@@ -15,6 +15,7 @@
  */
 var DojoWebpackPlugin = require("dojo-webpack-plugin");
 var CopyWebpackPlugin = require("copy-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 var UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 
@@ -22,7 +23,7 @@ var path = require("path");
 var webpack = require("webpack");
 
 module.exports = env => {
-  const devmode = !!(env||{}).dev;
+	const devmode = !!(env || {}).dev;
 	return {
 		context: __dirname,
 		entry: "js/bootstrap",
@@ -33,49 +34,82 @@ module.exports = env => {
 			filename: "bundle.js"
 		},
 		module: {
-			rules: [{
-		    test: /\.(png)|(gif)$/,
-		    use: [
-		      {
-		        loader: 'url-loader',
-		        options: {
-		          limit: 100000
-		        }
-		      }
-		    ]
-		  }]
+			rules: [
+				{
+					test: /\.(png)|(gif)$/,
+					use: [
+						{
+							loader: 'url-loader',
+							options: {
+								limit: 100000
+							}
+						}
+					]
+				},
+                {
+                    test: /\.css$/,
+                    use: [
+                        {
+                            loader: MiniCssExtractPlugin.loader
+                        },
+                        {
+                            loader: "css-loader"
+                        }
+                    ]
+                },
+                {
+                    test: /\.less$/,
+                    use: [
+                        {
+                            loader: MiniCssExtractPlugin.loader
+                        },
+                        {
+                            loader: "css-loader"
+                        },
+                        {
+                            loader: "less-loader"
+                        }
+                    ]
+                },
+			]
 		},
 		plugins: [
 			new DojoWebpackPlugin({
 				loaderConfig: require("./js/loaderConfig"),
-				environment: {dojoRoot: "release"},	// used at run time for non-packed resources (e.g. blank.gif)
-				buildEnvironment: {dojoRoot: "node_modules"}, // used at build time
+				environment: { dojoRoot: "release" },	// used at run time for non-packed resources (e.g. blank.gif)
+				buildEnvironment: { dojoRoot: "node_modules" }, // used at build time
 				locales: ["en"],
 				noConsole: true
 			}),
 
 			// Copy non-packed resources needed by the app to the release directory
-			new CopyWebpackPlugin([{
-				context: "node_modules",
-				from: "dojo/resources/blank.gif",
-				to: "dojo/resources"
-			}]),
+			new CopyWebpackPlugin({
+				patterns: [{
+					context: "node_modules",
+					from: "dojo/resources/blank.gif",
+					to: "dojo/resources"
+				}]
+			}),
 
 			// For plugins registered after the dojo-webpack-plugin, data.request has been normalized and
 			// resolved to an absMid and loader-config maps and aliases have been applied
 			new webpack.NormalModuleReplacementPlugin(/^dojox\/gfx\/renderer!/, "dojox/gfx/canvas"),
 			new webpack.NormalModuleReplacementPlugin(
-				/^css!/, function(data) {
-					data.request = data.request.replace(/^css!/, "!style-loader!css-loader!less-loader!")
+				/^css!/, function (data) {
+					data.request = data.request.replace(/^css!/, "")
 				}
 			),
 
+			new MiniCssExtractPlugin({
+				filename: "[name].css",
+			}),
+
 			new HtmlWebpackPlugin({
-                filename: "expanded_template.html",
-                template: "template.html",
-                inject: false,
-                minify: false,
-            })
+				filename: "expanded_template.html",
+				template: "template.html",
+				inject: false,
+				minify: false,
+			})
 		],
 		resolveLoader: {
 			modules: ["node_modules"]
@@ -85,20 +119,20 @@ module.exports = env => {
 			namedModules: false,
 			splitChunks: false,
 			minimizer: devmode ? [] : [
-	      // we specify a custom UglifyJsPlugin here to get source maps in production
-	      new UglifyJsPlugin({
-	        cache: true,
-	        parallel: true,
-	        uglifyOptions: {
-	          compress: true,
-	          mangle: true,
-						output: {comments:false}
-	        },
-	        sourceMap: true
-	      })
-	    ],
-	  },
-    performance: { hints: false },
+				// we specify a custom UglifyJsPlugin here to get source maps in production
+				new UglifyJsPlugin({
+					cache: true,
+					parallel: true,
+					uglifyOptions: {
+						compress: true,
+						mangle: true,
+						output: { comments: false }
+					},
+					sourceMap: true
+				})
+			],
+		},
+		performance: { hints: false },
 		devtool: "#source-map",
 		devServer: {
 			open: true,

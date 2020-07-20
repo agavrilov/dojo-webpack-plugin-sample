@@ -79,7 +79,8 @@ module.exports = env => {
 				environment: { dojoRoot: "release" },	// used at run time for non-packed resources (e.g. blank.gif)
 				buildEnvironment: { dojoRoot: "node_modules" }, // used at build time
 				locales: ["en"],
-				noConsole: true
+				noConsole: true,
+				ignoredCompilationNames: [/^mini-css-extract-plugin\s/],
 			}),
 
 			// Copy non-packed resources needed by the app to the release directory
